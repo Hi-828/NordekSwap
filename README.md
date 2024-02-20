@@ -52,4 +52,4 @@ linked from the [v1.0.0 release](https://nordekdexui.web.app).
 
 ## Live website
 
-[https](https://nordekdexui.web.app/#/swap)
+[https://nordekdexui.web.app/#/swap](https://nordekdexui.web.app/#/swap)
