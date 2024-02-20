@@ -48,3 +48,7 @@ linked from the [v1.0.0 release](https://nordekdexui.web.app).
 ## Live website
 
 [https://nordekdexui.web.app/#/swap](https://nordekdexui.web.app/#/swap)
+
+## Limitation
+
+We used the free plan coingecko API. So there is a limitation to accessing API per minute and getting tokens.
