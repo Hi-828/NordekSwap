@@ -48,6 +48,7 @@ import Loader from '../../components/Loader'
 import { useIsTransactionUnsupported } from 'hooks/Trades'
 import UnsupportedCurrencyFooter from 'components/swap/UnsupportedCurrencyFooter'
 import { isTradeBetter } from 'utils/trades'
+import axios from 'axios';
 
 export default function Swap() {
   const loadedUrlParams = useDefaultsFromURLSearch()
@@ -58,6 +59,7 @@ export default function Swap() {
     useCurrency(loadedUrlParams?.outputCurrencyId)
   ]
   const [dismissTokenWarning, setDismissTokenWarning] = useState<boolean>(false)
+
   const urlLoadedTokens: Token[] = useMemo(
     () => [loadedInputCurrency, loadedOutputCurrency]?.filter((c): c is Token => c instanceof Token) ?? [],
     [loadedInputCurrency, loadedOutputCurrency]
@@ -102,6 +104,47 @@ export default function Swap() {
     currencies[Field.OUTPUT],
     typedValue
   )
+  const [tooManyRequest, setTooManyRequest] = useState(false);
+  const [tooManyOutputRequest, setTooManyOutputRequest] = useState(false);
+
+
+  const getTokenPrice = async (symbol: string | undefined, type: boolean) => {
+    axios
+      .get(
+        "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd"
+      )
+      .then((res) => {
+        type? setTooManyRequest(false) : setTooManyOutputRequest(false);
+        const filteredToken = res.data.filter((item: any) => item.symbol.toLowerCase() === symbol?.toLowerCase());
+        type?
+        setSelectedInputCurrencyData({price: filteredToken[0]?.current_price, symbol: filteredToken[0]?.symbol}):
+        setSelectedOutputCurrencyData({price: filteredToken[0]?.current_price, symbol: filteredToken[0]?.symbol});
+      })
+      .catch((error) => {
+        type? setTooManyRequest(true) : setTooManyRequest(true);
+        console.log(error);
+      });
+  }
+  const [selectedInputCurrencyData, setSelectedInputCurrencyData] = useState<{price?: number | undefined, symbol?: string | undefined}>({
+    price : undefined,
+    symbol : undefined
+  })
+
+  useEffect(() => {
+    const symbol = currencies[Field.INPUT]?.symbol;
+    getTokenPrice(symbol, true);
+  }, [currencies[Field.INPUT]])
+
+  const [selectedOutputCurrencyData, setSelectedOutputCurrencyData] = useState<{price?: number | undefined, symbol?: string | undefined}>({
+    price : undefined,
+    symbol : undefined
+  })
+
+  useEffect(() => {
+    const symbol = currencies[Field.OUTPUT]?.symbol;
+    getTokenPrice(symbol, false);
+  }, [currencies[Field.OUTPUT]])
+  
   const showWrap: boolean = wrapType !== WrapType.NOT_APPLICABLE
   const { address: recipientAddress } = useENSAddress(recipient)
   const toggledVersion = useToggledVersion()
@@ -328,6 +371,10 @@ export default function Swap() {
               otherCurrency={currencies[Field.OUTPUT]}
               id="swap-currency-input"
             />
+            {tooManyRequest?
+              <TYPE.error error={true} fontWeight={500} style={{justifySelf: 'end', marginRight: '10px'}} >You are using free plan api. Too many request</TYPE.error>: 
+              <TYPE.blue fontWeight={500} style={{justifySelf: 'end', marginRight: '10px'}} >{currencies[Field.INPUT]?.symbol}: ${selectedInputCurrencyData.price}</TYPE.blue>
+            }
             <AutoColumn justify="space-between">
               <AutoRow justify={isExpertMode ? 'space-between' : 'center'} style={{ padding: '0 1rem' }}>
                 <ArrowWrapper clickable>
@@ -357,7 +404,10 @@ export default function Swap() {
               otherCurrency={currencies[Field.INPUT]}
               id="swap-currency-output"
             />
-
+            {tooManyOutputRequest?
+              <TYPE.error error={true} fontWeight={500} style={{justifySelf: 'end', marginRight: '10px'}} >You are using free plan api. Too many request</TYPE.error>: 
+              <TYPE.blue fontWeight={500} style={{justifySelf: 'end', marginRight: '10px'}} >{currencies[Field.OUTPUT]?.symbol}: ${selectedOutputCurrencyData.price}</TYPE.blue>
+            }
             {recipient !== null && !showWrap ? (
               <>
                 <AutoRow justify="space-between" style={{ padding: '0 1rem' }}>
