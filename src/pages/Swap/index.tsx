@@ -116,16 +116,17 @@ export default function Swap() {
       .then((res) => {
         type? setTooManyRequest(false) : setTooManyOutputRequest(false);
         const filteredToken = res.data.filter((item: any) => item.symbol.toLowerCase() === symbol?.toLowerCase());
+        const proccessedFilterToken = filteredToken[0]? filteredToken[0]?.current_price : 'not supported token'
         type?
-        setSelectedInputCurrencyData({price: filteredToken[0]?.current_price, symbol: filteredToken[0]?.symbol}):
-        setSelectedOutputCurrencyData({price: filteredToken[0]?.current_price, symbol: filteredToken[0]?.symbol});
+        setSelectedInputCurrencyData({price: proccessedFilterToken, symbol: filteredToken[0]?.symbol}):
+        setSelectedOutputCurrencyData({price: proccessedFilterToken, symbol: filteredToken[0]?.symbol});
       })
       .catch((error) => {
-        type? setTooManyRequest(true) : setTooManyRequest(true);
+        type? setTooManyRequest(true) : setTooManyOutputRequest(true);
         console.log(error);
       });
   }
-  const [selectedInputCurrencyData, setSelectedInputCurrencyData] = useState<{price?: number | undefined, symbol?: string | undefined}>({
+  const [selectedInputCurrencyData, setSelectedInputCurrencyData] = useState<{price?: any | undefined, symbol?: string | undefined}>({
     price : undefined,
     symbol : undefined
   })
@@ -372,7 +373,12 @@ export default function Swap() {
             />
             {tooManyRequest?
               <TYPE.error error={true} fontWeight={500} style={{justifySelf: 'end', marginRight: '10px'}} >You are using free plan api. Too many request</TYPE.error>: 
-              <TYPE.blue fontWeight={500} style={{justifySelf: 'end', marginRight: '10px'}} >{currencies[Field.INPUT]?.symbol}: ${selectedInputCurrencyData.price}</TYPE.blue>
+              <TYPE.blue fontWeight={500} style={{justifySelf: 'end', marginRight: '10px'}} >
+                {currencies[Field.INPUT]?.symbol?
+                  `${currencies[Field.INPUT]?.symbol}: ${selectedInputCurrencyData.price}`:
+                  <TYPE.error error={true} fontWeight={500} style={{justifySelf: 'end', marginRight: '10px'}} >Please select token</TYPE.error>
+                }
+              </TYPE.blue>
             }
             <AutoColumn justify="space-between">
               <AutoRow justify={isExpertMode ? 'space-between' : 'center'} style={{ padding: '0 1rem' }}>
@@ -405,7 +411,12 @@ export default function Swap() {
             />
             {tooManyOutputRequest?
               <TYPE.error error={true} fontWeight={500} style={{justifySelf: 'end', marginRight: '10px'}} >You are using free plan api. Too many request</TYPE.error>: 
-              <TYPE.blue fontWeight={500} style={{justifySelf: 'end', marginRight: '10px'}} >{currencies[Field.OUTPUT]?.symbol}: ${selectedOutputCurrencyData.price}</TYPE.blue>
+              <TYPE.blue fontWeight={500} style={{justifySelf: 'end', marginRight: '10px'}} >
+                {currencies[Field.OUTPUT]?.symbol?
+                  `${currencies[Field.OUTPUT]?.symbol}: ${selectedOutputCurrencyData.price}`:
+                  <TYPE.error error={true} fontWeight={500} style={{justifySelf: 'end', marginRight: '10px'}} >Please select token</TYPE.error>
+                }
+              </TYPE.blue>
             }
             {recipient !== null && !showWrap ? (
               <>
